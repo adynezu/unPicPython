@@ -23,7 +23,3 @@ class TestSetVmMemory(unittest.TestCase):
 
         	self._vmutils._modify_virt_resource.assert_called_with(
             	mock_s, self._FAKE_VM_PATH)
-        if dynamic_memory_ratio > 1:
-            self.assertTrue(mock_s.DynamicMemoryEnabled)
-        else:
-            self.assertFalse(mock_s.DynamicMemoryEnabled)
