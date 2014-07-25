@@ -3,23 +3,42 @@ import mock
 from nova.virt.hyperv import vmutils
 
 class TestSetVmMemory(unittest.TestCase):
-	def _lookup_vm(self):
-        	mock_vm = mock.MagicMock()
-        	self._vmutils._lookup_vm_check = mock.MagicMock(
-        		return_value=mock_vm)
-	        mock_vm.path_.return_value = self._FAKE_VM_PATH
-		return mock_vm
+	def test_set_vm_memory_true(self):
+		dynamic_memory_ratio = 2
+		max_mem = long(2048)
+		mock_mem_set = mock.MagicMock()
+		mock_mem_set = vmsettig.associators(
+			wmi_result_class=self._MEMORY_SETTING_DATA_CLASS)[0]
+		mock_mem_set.Limit = max_mem
+		self.assertEqual(mock_mem_set.Limit, 2048)
+		mock_mem_set.DynamicMemoryEnabled = True
+		self.assertEqual(mock_mem_set.DynamicMemoryEnabled, True)
+		reserved_mem = min(
+			long(max_mem / dynamic_memory_ratio) >> 1 << 1, 
+			max_mem)
+		mock_mem_set.Reservation = reserved_mem
+		self.assertEqual(mock_mem_set.Reservation, 
+			min( long(max_mem / dynamic_memory_ratio) 
+				>> 1 << 1, max_mem))
+		mock_mem_set.VirtualQuantity = reserved_mem
+   		self.assertEqual(mock_mem_set.VirtualQuantity, 
+			min( long(max_mem / dynamic_memory_ratio) 
+				>> 1 << 1, max_mem))
 
-	def _test_set_vm_memory_dynamic(self, dynamic_memory_ratio):
-        	mock_vm = self._lookup_vm()
-        	mock_s = self._vmutils._conn.Msvm_VirtualSystemSettingData()[0]
-        	mock_s.SystemType = 3
-        	mock_vmsetting = mock.MagicMock()
-		mock_vmsetting.associators.return_value = [mock_s]
-        	self._vmutils._modify_virt_resource = mock.MagicMock()
-        	self._vmutils._set_vm_memory(mock_vm, mock_vmsetting,
-                                     self._FAKE_MEMORY_MB,
-                                     dynamic_memory_ratio)
-
-        	self._vmutils._modify_virt_resource.assert_called_with(
-            	mock_s, self._FAKE_VM_PATH)
+    def test_set_vm_memory_false(self):
+		dynamic_memory_ratio = 2
+		max_mem = long(2048)
+		mock_mem_set = mock.MagicMock()
+		mock_mem_set = vmsettig.associators(
+			wmi_result_class=self._MEMORY_SETTING_DATA_CLASS)[0]
+		mock_mem_set.Limit = max_mem
+		self.assertEqual(mock_mem_set.Limit, 2048)
+		mock_mem_set.DynamicMemoryEnabled = False
+		self.assertEqual(mock_mem_set.DynamicMemoryEnabled, False)
+		reserved_mem = max_mem
+		mock_mem_set.Reservation = reserved_mem
+		self.assertEqual(mock_mem_set.Reservation, 
+			long(2048))
+		mock_mem_set.VirtualQuantity = reserved_mem
+   		self.assertEqual(mock_mem_set.VirtualQuantity, 
+			long(2048))
